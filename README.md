@@ -20,13 +20,6 @@ A narrative-driven thriller game powered by AI agents, where players interact wi
   - Uses AI or web tools to search factual information (e.g., history, symbols, psychology, places)
   - Feeds back concise data to the narrator to integrate into the story
 
-- **Orchestrator**:
-  - Central controller that:
-    - Handles user input
-    - Routes requests to the narrator
-    - Detects special `[[RESEARCH: ...]]` tokens in narrator output
-    - Retrieves research results and re-prompts the narrator for a final response
-
 ---
 
 ## 📌 Example Flow
@@ -58,12 +51,11 @@ A narrative-driven thriller game powered by AI agents, where players interact wi
 
 ---
 
-## 🚧 Planned Features
+## 🚧 Tools
 
-- Game log tracking with timestamps
-- Optional memory (conversation history)
-- Web-based UI using Gradio or Streamlit
-- Inventory system and branching decision trees
+- Game log tracking
+- Research log tracking
+- Inventory system
 - Save/load game state
 
 ---
@@ -81,7 +73,7 @@ A narrative-driven thriller game powered by AI agents, where players interact wi
 
 ## 🧩 How to Run
 
-### Not yet implemented. Use the notebook at ./notebooks/ThrillerGameAgent.ipynb for current features.
+### Not yet implemented. Use the notebook at ./notebooks/ThrillerGameAgent.ipynb for current features and testing.
 
 1. Clone the repo
 2. Set up your OpenAI or compatible API key
