@@ -1,0 +1,4 @@
+gradio
+python-dotenv
+nest-asyncio
+openai-agents
