@@ -22,7 +22,7 @@ nest_asyncio.apply()
 
 # core deps
 try:
-    from thriller_module import respond_narrator
+    from ..game.thriller_module import respond_narrator
 except ModuleNotFoundError:
     def respond_narrator(_msg: str) -> str:
         return "Dependency missing: 'openai-agents' (module 'agents'). Please run: pip install openai-agents"
