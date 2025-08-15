@@ -14,7 +14,7 @@ APP_NAME = "Thriller Game"
 APP_DESC = "A near-future text thriller powered by a Narrator Agent."
 APP_VERSION = "0.1.0"
 APP_URL = os.getenv("APP_URL", "http://127.0.0.1:7860")
-ENV_PATH = "../resources/openaiApiKey.env"
+ENV_PATH = "./resources/openaiApiKey.env"
 
 # env + asyncio
 load_dotenv(dotenv_path=ENV_PATH)
@@ -22,10 +22,13 @@ nest_asyncio.apply()
 
 # core deps
 try:
-    from game.thriller_module import respond_narrator
-except ModuleNotFoundError:
-    def respond_narrator(_msg: str) -> str:
-        return "Dependency missing: 'openai-agents' (module 'agents'). Please run: pip install openai-agents"
+    from game.api import respond_narrator
+except ModuleNotFoundError as e:
+    if e.name == "agents":
+        def respond_narrator(_msg: str) -> str:
+            return "Dependency missing: 'openai-agents' (module 'agents'). Please run: pip install openai-agents"
+    else:
+        raise
 
 # ----- ui pieces -----
 def build_theme():

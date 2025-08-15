@@ -8,7 +8,7 @@ from typing import List, Tuple
 # Try to import the real narrator hook; fall back with a friendly message.
 try:
     # Keep this path aligned with your actual module (you can change it later).
-    from thriller.engine import respond_narrator
+    from game.engine import respond_narrator
  # noqa: F401
 except Exception:
     respond_narrator = None  # type: ignore

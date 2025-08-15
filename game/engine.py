@@ -6,13 +6,13 @@ import asyncio
 from typing import Optional
 
 from agents import Agent, Runner, WebSearchTool  # same lib you already use
-from thriller import content
-from thriller.state import (
+from game import content
+from game.state import (
     default_state,
     save_state,      # NEW: autosave after each turn
     load_state,      # Optional: for manual/initial load
 )
-from thriller.tools import (
+from game.tools import (
     update_game_log,
     update_research_log,
     add_player_item,

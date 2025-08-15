@@ -1,11 +1,10 @@
 """
-Function tools used by the narrator agent.
-Implements the same behavior as your monolithic version, but writes into `state`.
+Function tools used by the agents.
 """
 
-from typing import Literal
-from agents import function_tool  # same decorator you already use
-from thriller.state import default_state, GameLogEntry, ResearchLogEntry, InventoryItem
+from typing import Literal, List
+from agents import function_tool
+from game.state import default_state, GameLogEntry, ResearchLogEntry, InventoryItem
 
 
 @function_tool
@@ -48,3 +47,23 @@ async def remove_player_item(item_name: str) -> str:
             default_state.items.remove(it)
             return f"{item_name} removed from your inventory."
     return f"{item_name} not found in your inventory."
+
+def set_narrator_tools(state) -> List:
+    """
+    Creates a list of tools for the narrator agent.
+    Only includes tools the narrator should have access to.
+    """
+    return [
+        update_game_log,
+        add_player_item,
+        remove_player_item
+    ]
+
+def set_web_researcher_tools(state) -> List:
+    """
+    Creates a list of tools for the narrator agent.
+    Only includes tools the narrator should have access to.
+    """
+    return [
+        update_research_log
+    ]

@@ -2,7 +2,7 @@
 import asyncio
 from agents import Runner
 from .state import GameState
-from .agents import make_narrator
+from .agents.narrator import make_narrator
 
 # Default single-user state (preserves current behavior)
 _default_state = GameState()

@@ -1,39 +1,37 @@
 """
-Gradio shell for the Thriller Game.
-- Small, readable Blocks layout
-- Theme + CSS polish
-- Meta routes: /manifest.json, /robots.txt, /sitemap.xml (via FastAPI)
+Thriller Game — Gradio Web App
+A cleaner, production-leaning structure (functions, constants, minimal comments).
 """
-
-import datetime
 import os
-
-import gradio as gr
+import datetime
 import nest_asyncio
+import gradio as gr
 from dotenv import load_dotenv
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, FileResponse
-from game.engine import autoload_state
 
+# ----- configuration -----
+APP_NAME = "Thriller Game"
+APP_DESC = "A near-future text thriller powered by a Narrator Agent."
+APP_VERSION = "0.1.0"
+APP_URL = os.getenv("APP_URL", "http://127.0.0.1:7860")
+ENV_PATH = "../resources/openaiApiKey.env"
 
-from app import APP_NAME, APP_DESC, APP_VERSION, APP_URL, ENV_PATH
-from app.router import Router
-
-# ---- env + asyncio ----
+# env + asyncio
 load_dotenv(dotenv_path=ENV_PATH)
 nest_asyncio.apply()
 
-router = Router()
+# core deps
+try:
+    from thriller_module import respond_narrator
+except ModuleNotFoundError:
+    def respond_narrator(_msg: str) -> str:
+        return "Dependency missing: 'openai-agents' (module 'agents'). Please run: pip install openai-agents"
 
-# ---- Try to load saved state at startup ----
-# This will automatically load the last saved game state if available.
-autoload_state()
-
-# ---- UI helpers ----
+# ----- ui pieces -----
 def build_theme():
     return gr.themes.Soft(primary_hue="indigo", neutral_hue="slate").set(
         body_background_fill="*background_fill_primary",
     )
-
 
 CSS = """
 .gradio-container{max-width:960px;margin:0 auto}
@@ -44,26 +42,19 @@ CSS = """
 .footer{color:#6b7280;font-size:.85rem;text-align:center;margin-top:14px}
 """
 
-
 def handle_chat(message, history):
-    return router.handle(message, history)
-
+    try:
+        return respond_narrator(message)
+    except Exception as e:
+        return f"⚠️ Error: {e!s}"
 
 def build_app():
     with gr.Blocks(title=APP_NAME, theme=build_theme(), css=CSS, analytics_enabled=False) as app:
-        # Header
         with gr.Row(elem_classes="header"):
             gr.Markdown(f"**{APP_NAME}**", elem_classes="title")
             gr.Markdown(f"<span class='meta'>v{APP_VERSION}</span>", elem_id="app-version")
-
-        # Intro / How-to
         with gr.Row():
-            gr.Markdown(
-                f"<div class='section'><p>{APP_DESC}</p>"
-                "<p><strong>How to play:</strong> try “Look around”, “Inventory”, “Open the door”.</p></div>"
-            )
-
-        # Chat
+            gr.Markdown(f"<div class='section'><p>{APP_DESC}</p><p><strong>How to play:</strong> try “Look around”, “Inventory”, “Open the door”.</p></div>")
         gr.ChatInterface(
             fn=handle_chat,
             type="messages",
@@ -72,16 +63,12 @@ def build_app():
             cache_examples=False,
             concurrency_limit=5,
         )
-
-        # Footer
         gr.Markdown(f"<div class='footer'>© {datetime.datetime.now().year} — {APP_NAME}</div>")
-
     return app
-
 
 demo = build_app()
 
-# ---- Meta routes (FastAPI mounted by Gradio) ----
+# ----- meta routes -----
 @demo.app.get("/manifest.json")
 def manifest():
     data = {
@@ -97,11 +84,9 @@ def manifest():
     }
     return JSONResponse(data)
 
-
 @demo.app.get("/robots.txt")
 def robots():
     return PlainTextResponse(f"User-agent: *\nAllow: /\nSitemap: {APP_URL.rstrip('/')}/sitemap.xml\n")
-
 
 @demo.app.get("/sitemap.xml")
 def sitemap():
@@ -111,14 +96,10 @@ def sitemap():
 </urlset>"""
     return Response(content=xml, media_type="application/xml")
 
-
-# Optional favicon passthrough if you drop a local file next to your entrypoint
 if os.path.exists("favicon.ico"):
     @demo.app.get("/favicon.ico")
     def favicon():
         return FileResponse("favicon.ico", media_type="image/x-icon")
 
-
 if __name__ == "__main__":
-    # Use `python -m app.main` or `python app/main.py`
     demo.launch()

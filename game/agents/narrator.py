@@ -1,9 +1,9 @@
 # game/narrator.py
 from agents import Agent
+from ..content import GAME_STORY
 from ..config import MODEL
-from ..story import GAME_STORY
 from ..state import GameState
-from ..tools import make_tools
+from ..tools import set_narrator_tools
 
 def make_narrator(state: GameState) -> Agent:
     instructions = f"""
@@ -28,5 +28,5 @@ After each player action:
         name="Thriller Narrator Agent",
         instructions=instructions,
         model=MODEL,
-        tools=make_tools(state),
+        tools=set_narrator_tools(state),
     )
