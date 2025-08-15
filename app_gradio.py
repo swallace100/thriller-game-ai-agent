@@ -1,82 +1,105 @@
 """
-Thriller Game — Gradio Web App
-A cleaner, production-leaning structure (functions, constants, minimal comments).
+Eternal Hunt: AI Agent Powered Game — Gradio Web App
 """
 import os
-import datetime
-import nest_asyncio
-import gradio as gr
 from dotenv import load_dotenv
+import datetime
+import gradio as gr
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, FileResponse
+from game.config import (
+    APP_NAME, 
+    APP_DESC, 
+    APP_VERSION, 
+    APP_URL,
+    EXAMPLE_COMMANDS,
+    API_KEY_PATH
+)
 
-# ----- configuration -----
-APP_NAME = "Thriller Game"
-APP_DESC = "A near-future text thriller powered by a Narrator Agent."
-APP_VERSION = "0.1.0"
-APP_URL = os.getenv("APP_URL", "http://127.0.0.1:7860")
-ENV_PATH = "./resources/openaiApiKey.env"
-
-# env + asyncio
-load_dotenv(dotenv_path=ENV_PATH)
-nest_asyncio.apply()
+# Load environment variables before importing game modules
+if os.path.exists(".env"):
+    load_dotenv()
+elif os.path.exists(API_KEY_PATH):
+    load_dotenv(dotenv_path=API_KEY_PATH)
 
 # core deps
 try:
     from game.api import respond_narrator
-except ModuleNotFoundError as e:
-    if e.name == "agents":
-        def respond_narrator(_msg: str) -> str:
-            return "Dependency missing: 'openai-agents' (module 'agents'). Please run: pip install openai-agents"
-    else:
-        raise
+    DEPS_OK = True
+except ModuleNotFoundError:
+    DEPS_OK = False
 
-# ----- ui pieces -----
+# ----- ui helpers -----
 def build_theme():
     return gr.themes.Soft(primary_hue="indigo", neutral_hue="slate").set(
         body_background_fill="*background_fill_primary",
     )
 
 CSS = """
-.gradio-container{max-width:960px;margin:0 auto}
-.header{display:flex;gap:12px;align-items:center;margin:10px 0 6px}
-.header .title{font-size:1.5rem;font-weight:800;letter-spacing:.2px}
-.header .meta{color:#6b7280;font-size:.9rem}
-.section{border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.03)}
-.footer{color:#6b7280;font-size:.85rem;text-align:center;margin-top:14px}
+.gradio-container { max-width: 960px; margin: 0 auto }
+.header { display: flex; gap: 12px; align-items: center; margin: 10px 0 6px }
+.header .title { font-size: 1.5rem; font-weight: 800; letter-spacing: .2px; color: #111827 }
+.header .meta { color: #4f46e5; font-size: .9rem; font-weight: 600 }
+.section { border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px 16px; background: #black }
+.status { margin-bottom: 12px }
+.footer { color: #6b7280; font-size: .85rem; text-align: center; margin-top: 14px }
 """
 
-def handle_chat(message, history):
+def handle_chat(message):
+    if not DEPS_OK:
+        return "⚠️ Could not load respond_narrator. Please check your dependencies."
     try:
         return respond_narrator(message)
     except Exception as e:
         return f"⚠️ Error: {e!s}"
 
 def build_app():
+    # Ensure API key is loaded before app starts
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise EnvironmentError("OpenAI API key not found. Please check your .env file.")
+
     with gr.Blocks(title=APP_NAME, theme=build_theme(), css=CSS, analytics_enabled=False) as app:
+        # Header with improved contrast
         with gr.Row(elem_classes="header"):
-            gr.Markdown(f"**{APP_NAME}**", elem_classes="title")
+            gr.Markdown(f"# {APP_NAME}", elem_classes="title")
             gr.Markdown(f"<span class='meta'>v{APP_VERSION}</span>", elem_id="app-version")
-        with gr.Row():
-            gr.Markdown(f"<div class='section'><p>{APP_DESC}</p><p><strong>How to play:</strong> try “Look around”, “Inventory”, “Open the door”.</p></div>")
+        
+        # Status section with app description
+        with gr.Row(elem_classes="status"):
+            gr.Markdown(
+                f"""<div class='section'>
+                <p>{APP_DESC}</p>
+                </div>"""
+            )
+
+        # Main chat interface
         gr.ChatInterface(
             fn=handle_chat,
-            type="messages",
-            textbox=gr.Textbox(placeholder="e.g., Look around the room", autofocus=True),
-            examples=["Look around", "Inventory", "Open the door", "Run outside"],
+            textbox=gr.Textbox(
+                placeholder="Type your action...", 
+                autofocus=True
+            ),
+            examples=EXAMPLE_COMMANDS,
             cache_examples=False,
             concurrency_limit=5,
+            type="messages"
         )
-        gr.Markdown(f"<div class='footer'>© {datetime.datetime.now().year} — {APP_NAME}</div>")
+
+        # Footer
+        gr.Markdown(
+            f"<div class='footer'>© {datetime.datetime.now().year} — {APP_NAME}</div>"
+        )
+    
     return app
 
 demo = build_app()
 
-# ----- meta routes -----
+# ----- FastAPI routes -----
 @demo.app.get("/manifest.json")
 def manifest():
     data = {
         "name": APP_NAME,
-        "short_name": "Thriller",
+        "short_name": "Outlive",
         "start_url": "/",
         "display": "standalone",
         "background_color": "#ffffff",
@@ -89,7 +112,9 @@ def manifest():
 
 @demo.app.get("/robots.txt")
 def robots():
-    return PlainTextResponse(f"User-agent: *\nAllow: /\nSitemap: {APP_URL.rstrip('/')}/sitemap.xml\n")
+    return PlainTextResponse(
+        f"User-agent: *\nAllow: /\nSitemap: {APP_URL.rstrip('/')}/sitemap.xml\n"
+    )
 
 @demo.app.get("/sitemap.xml")
 def sitemap():

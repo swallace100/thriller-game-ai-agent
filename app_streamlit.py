@@ -1,22 +1,23 @@
 """
-Thriller Game — Streamlit Web App
-A cleaner, production-leaning structure (functions, constants, minimal comments).
+Eternal Hunt: AI Agent Powered Game — Streamlit Web App
 """
 import os
-import datetime
-import nest_asyncio
-import streamlit as st
 from dotenv import load_dotenv
+import datetime
+import streamlit as st
+from game.config import (
+    APP_NAME, 
+    APP_DESC, 
+    APP_VERSION, 
+    EXAMPLE_COMMANDS,
+    API_KEY_PATH
+)
 
-# ----- configuration -----
-APP_NAME = "Thriller Game"
-APP_DESC = "A near-future text thriller powered by a Narrator Agent."
-APP_VERSION = "0.1.0"
-ENV_PATH = "./resources/openaiApiKey.env"
-
-# env + asyncio
-load_dotenv(dotenv_path=ENV_PATH)
-nest_asyncio.apply()
+# Load environment variables before importing game modules
+if os.path.exists(".env"):
+    load_dotenv()
+elif os.path.exists(API_KEY_PATH):
+    load_dotenv(dotenv_path=API_KEY_PATH)
 
 # core deps
 try:
@@ -57,8 +58,7 @@ def sidebar():
         st.markdown("---")
         st.markdown("##### Examples")
         ex_cols = st.columns(2)
-        examples = ["Look around", "Inventory", "Open the door", "Run outside"]
-        for i, ex in enumerate(examples):
+        for i, ex in enumerate(EXAMPLE_COMMANDS):
             if ex_cols[i % 2].button(ex, key=f"ex_{i}", use_container_width=True):
                 st.session_state["_pending_prompt"] = ex
                 st.rerun()
@@ -106,7 +106,7 @@ def main():
 
     header()
     if not DEPS_OK:
-        st.warning("Dependency missing: `openai-agents` (module `agents`). Run: `pip install openai-agents`", icon="⚠️")
+        st.warning("⚠️ Could not load respond_narrator. Please check your dependencies.")
 
     render_history()
 
