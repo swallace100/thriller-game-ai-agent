@@ -1,176 +1,138 @@
-# 🎭 Thriller Game AI Agent — Web & Notebook Versions
+# Thriller Game 🎭
 
-A **narrative-driven thriller** where players interact with a dynamic **Narrator Agent** that generates immersive, suspenseful storylines — and secretly consults a **Research Agent** for accurate real-world facts when needed.
+A near-future text thriller powered by an AI Narrator Agent. Experience an interactive story through natural language commands and responses.
 
-Built to run in:
+## 🚀 Features
 
-- **Jupyter Notebook** (development / prototyping)
-- **Gradio web app** (interactive browser experience with meta endpoints)
-- **Streamlit web app** (interactive browser experience with sidebar tools and example actions)
+- Interactive text-based gameplay
+- AI-powered narrative responses
+- Inventory management system
+- Game state tracking
+- Multiple user interfaces (Gradio & Streamlit)
+- Clean, production-ready code structure
 
----
-
-## 🧠 Core Concept
-
-> The player never speaks to the Research Agent directly. The Narrator orchestrates all in-world responses, seamlessly weaving research into the narrative to preserve immersion and tone.
-
----
-
-## 🕹️ Features
-
-### **Narrator Agent**
-
-- Generates rich, scene-by-scene storytelling with pacing and dramatic tension.
-- Recognizes when external factual knowledge is needed and triggers background research.
-- Maintains a consistent thriller tone while integrating facts naturally.
-
-### **Research Agent**
-
-- Activated **only** by the Narrator Agent.
-- Can access web search or other factual sources (e.g., history, symbols, locations).
-- Returns concise factual summaries for in-story use.
-
-### **Game Systems**
-
-- **Game Log** — Tracks events, discoveries, and decisions.
-- **Research Log** — Stores all research queries and results.
-- **Inventory** — Add/remove items dynamically.
-- **Save/Load** — (Planned) Persist and restore game state.
-- **Extensible Tooling** — Easily add new tool functions for other agents.
-
----
-
-## 📌 Example Narrative Flow
-
-**User Input:**
-
-> What is the symbol on the floor? It looks like a spiral with a triangle.
-
-**Narrator Output (internal trigger):**
+## 📁 Project Structure
 
 ```
-[[RESEARCH: spiral with triangle symbol occult meaning]]
+agent-code/
+├── game/
+│   ├── __init__.py
+│   ├── api.py              # Core game API functions
+│   ├── state.py            # Game state management
+│   ├── tools.py            # Function tools for agents
+│   ├── content.py          # Game story and content
+│   ├── config.py           # Configuration settings
+│   └── agents/
+│       ├── __init__.py
+│       └── narrator.py     # Narrator agent implementation
+├── app_gradio.py          # Gradio web interface
+├── app_streamlit.py       # Streamlit web interface
+├── .env                   # Environment variables (create this)
+└── requirements.txt       # Project dependencies
 ```
 
-**Research Agent Response:**
+## 🛠️ Setup
 
-> This symbol resembles the Triquetra, a pagan emblem representing the cycle of life, death, and rebirth.
+1. Clone the repository
+2. Create a virtual environment:
 
-**Final Narrator Response:**
+```bash
+python -m venv venv
+.\venv\Scripts\activate
+```
 
-> The symbol isn’t random — it’s an ancient triquetra. Your skin tingles as you realize this place may be tied to something far older... and darker.
-
----
-
-## 🛠️ Tech Stack
-
-- **Language:** Python 3.10+
-- **Core AI:** `openai` or compatible async chat model API (e.g., `litellm`)
-- **UI Frameworks:**
-  - **Gradio** — Clean Blocks layout, custom theme, example inputs, manifest/robots/sitemap endpoints.
-  - **Streamlit** — Sidebar tools, example buttons, auto-scroll toggle, clean chat interface.
-- **Async Support:** `nest_asyncio`
-- **Environment Management:** `python-dotenv`
-- **Optional Web Search:** SerpAPI, Tavily, or custom API integration.
-
----
-
-## 🌐 Web App Versions
-
-### **Gradio Version**
-
-- Styled with a clean Soft theme and custom CSS.
-- **Example Actions:** “Look around”, “Inventory”, “Open the door”, “Run outside”.
-- **Meta Endpoints Provided:**
-  - `/manifest.json` — PWA manifest.
-  - `/robots.txt` — Crawler rules.
-  - `/sitemap.xml` — Sitemap for SEO.
-- Optional favicon support.
-
-Run:
+3. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
-python app_gradio_webapp.py
 ```
 
-Then open: `http://127.0.0.1:7860`
+4. Create a `.env` file in the project root:
 
----
+```env
+OPENAI_API_KEY=your-api-key-here
+```
 
-### **Streamlit Version**
+## 🎮 Running the Game
 
-- Sidebar with:
-  - Game description & version info
-  - API key status
-  - Clear chat button
-  - Auto-scroll toggle
-  - Clickable example prompts
-- Styled header/footer and in-chat assistant/user messages.
-- Designed for both local play and easy deployment.
+You can run the game using either the Gradio or Streamlit interface:
 
-Run:
+### Gradio Interface
 
 ```bash
-pip install streamlit python-dotenv nest-asyncio
-python -m streamlit run app_streamlit_webapp.py
+python app_gradio.py
 ```
 
----
+Then open http://127.0.0.1:7860 in your browser.
 
-## 📓 Notebook Version
-
-For development and prototyping, you can run the Jupyter notebook:
+### Streamlit Interface
 
 ```bash
-jupyter notebook notebooks/ThrillerGameAgent.ipynb
+python streamlit run app_streamlit.py
 ```
 
-- Fully contains agent definitions and tools.
-- Great for quick iteration and debugging.
+Then open http://localhost:8501 in your browser.
 
----
+## 🎯 How to Play
 
-## 📁 File Structure
+Try these example commands:
+
+- "Look around"
+- "Inventory"
+- "Open the door"
+- "Run outside"
+
+## 💻 Technology Stack
+
+- Python 3.x
+- OpenAI GPT Models
+- Gradio
+- Streamlit
+- OpenAI Agents Framework
+
+## 🔑 Environment Variables
+
+Required environment variables:
+
+- `OPENAI_API_KEY`: Your OpenAI API key
+- `APP_URL`: (Optional) Custom URL for deployment
+
+## 📝 License
+
+This project is licensed under the MIT License:
 
 ```
-.
-├── thriller_module.py             # Core agents & tool functions
-├── app_gradio_webapp.py           # Gradio UI implementation
-├── app_streamlit_webapp.py        # Streamlit UI implementation
-├── notebooks/
-│   └── ThrillerGameAgent.ipynb    # Development/prototype notebook
-├── resources/
-│   └── openaiApiKey.env           # API key storage
-├── requirements.txt
-├── README.md
+MIT License
+
+Copyright (c) 2025 Thriller Game
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
 
----
+## 🤝 Contributing
 
-## 🔑 Environment Setup
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-1. Create a `openaiApiKey.env` file or use the provided `openaiApiKey.env_example`:
+## ⚠️ Note
 
-```
-OPENAI_API_KEY=sk-...
-```
-
-2. Update the `load_dotenv(dotenv_path=...)` path if your `.env` location differs.
-
----
-
-## 🚀 Deployment Notes
-
-- **Gradio**: Suitable for quick demos and public links via `share=True`.
-- **Streamlit**: Good for dashboards and more structured UIs; easily deployable on Streamlit Cloud.
-- **Production**: For a public game, secure API keys and consider adding database-backed save/load.
-
----
-
-## 🧩 Next Steps
-
-- Implement persistent save/load via JSON or SQLite.
-- Add an **Inventory Panel** in the Streamlit sidebar.
-- Support branching storylines with player stats.
-- Package agents into a lightweight backend service.
+Remember to never commit your API keys or sensitive information to version control.
