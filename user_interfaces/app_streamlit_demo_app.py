@@ -20,7 +20,7 @@ nest_asyncio.apply()
 
 # core deps
 try:
-    from game.thriller_module import respond_narrator
+    from thriller_module import respond_narrator
     DEPS_OK = True
 except ModuleNotFoundError:
     DEPS_OK = False
