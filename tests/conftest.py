@@ -70,17 +70,17 @@ def temp_save_path_env(monkeypatch, tmp_path):
 @pytest.fixture(scope="function")
 def fresh_thriller_modules():
     """
-    Ensure we load thriller.* modules fresh each test so state doesn't leak.
+    Ensure we load game modules fresh each test so state doesn't leak.
     """
     # Remove any cached imports
     for name in list(sys.modules):
-        if name == "thriller" or name.startswith("thriller."):
+        if name == "game" or name.startswith("game."):
             del sys.modules[name]
 
     # Import in dependency order
-    thriller = importlib.import_module("thriller")
-    content = importlib.import_module("thriller.content")
-    state = importlib.import_module("thriller.state")
-    tools = importlib.import_module("thriller.tools")
-    engine = importlib.import_module("thriller.engine")
-    return thriller, content, state, tools, engine
+    game = importlib.import_module("game")
+    content = importlib.import_module("game.content")
+    state = importlib.import_module("game.state")
+    tools = importlib.import_module("game.tools")
+    api = importlib.import_module("game.api")
+    return game, content, state, tools, api
