@@ -12,13 +12,11 @@ import os
 GameLogCategory = Literal["event", "discovery", "decision", "question", "item", "ambient"]
 ResearchCategory = Literal["info", "symbol", "historical", "technical", "psychological", "warning"]
 
-
 @dataclass
 class GameLogEntry:
     category: GameLogCategory
     entry: str
     ts: float = field(default_factory=lambda: time.time())
-
 
 @dataclass
 class ResearchLogEntry:
@@ -26,12 +24,10 @@ class ResearchLogEntry:
     entry: str
     ts: float = field(default_factory=lambda: time.time())
 
-
 @dataclass
 class InventoryItem:
     name: str
     description: str = ""
-
 
 @dataclass
 class GameState:
@@ -64,12 +60,17 @@ class GameState:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, ensure_ascii=False, indent=2)
 
+    def save(self, path: str | None = None) -> str:
+        """Convenience wrapper that picks up the env var at save time."""
+        path = path or _get_save_path()
+        self.save_json(path)
+        return path
+
     @classmethod
     def load_json(cls, path: str) -> "GameState":
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         return cls.from_dict(data)
-
 
 # ---------- default global state ----------
 default_state = GameState()
@@ -77,12 +78,18 @@ default_state = GameState()
 # ---------- persistence helpers ----------
 DEFAULT_SAVE_PATH = os.getenv("THRILLER_SAVE_PATH", "assets/sample_runs/session_latest.json")
 
+def _get_save_path(path: str | None = None) -> str:
+    return path or os.getenv(
+        "THRILLER_SAVE_PATH",
+        "assets/sample_runs/session_latest.json"
+    )
 
 def save_state(path: str = DEFAULT_SAVE_PATH) -> None:
     """
     Saves the current default_state to the given path.
     Creates directories as needed.
     """
+    path = _get_save_path(path)
     default_state.save_json(path)
 
 
@@ -92,6 +99,7 @@ def load_state(path: str = DEFAULT_SAVE_PATH) -> None:
     Overwrites current in-memory logs/items.
     """
     global default_state
+    path = _get_save_path(path)
     if os.path.exists(path):
         default_state = GameState.load_json(path)
     else:
