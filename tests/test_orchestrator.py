@@ -1,3 +1,5 @@
+import json
+import os
 import pytest
 
 class TestEngine:
@@ -17,7 +19,7 @@ class TestState:
     
     def test_state_serialization(self, sample_game_state, game_save_path):
         state = sample_game_state
-        state.save_state(str(game_save_path))
+        state.save(str(game_save_path))
         
         data = json.loads(game_save_path.read_text(encoding="utf-8"))
         assert "game_log" in data
