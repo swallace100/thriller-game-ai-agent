@@ -68,7 +68,7 @@ Then open http://127.0.0.1:7860 in your browser.
 ### Streamlit Interface
 
 ```bash
-python streamlit run app_streamlit.py
+python -m streamlit run app_streamlit.py
 ```
 
 Then open http://localhost:8501 in your browser.
