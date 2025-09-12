@@ -66,7 +66,6 @@ def build_app():
         # Chat
         gr.ChatInterface(
             fn=handle_chat,
-            type="messages",
             textbox=gr.Textbox(placeholder="e.g., Look around the room", autofocus=True),
             examples=["Look around", "Inventory", "Open the door", "Run outside"],
             cache_examples=False,

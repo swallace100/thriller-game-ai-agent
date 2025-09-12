@@ -44,7 +44,7 @@ CSS = """
 .footer { color: #6b7280; font-size: .85rem; text-align: center; margin-top: 14px }
 """
 
-def handle_chat(message):
+def handle_chat(message, history):  # <-- accept (message, history)
     if not DEPS_OK:
         return "⚠️ Could not load respond_narrator. Please check your dependencies."
     try:
@@ -81,8 +81,7 @@ def build_app():
             ),
             examples=EXAMPLE_COMMANDS,
             cache_examples=False,
-            concurrency_limit=5,
-            type="messages"
+            concurrency_limit=5
         )
 
         # Footer
