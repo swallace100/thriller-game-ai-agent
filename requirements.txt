@@ -1,0 +1,5 @@
+python-dotenv>=1.1.1
+gradio>=5.43.0
+fastapi>=0.118
+uvicorn[standard]>=0.37.0
+streamlit>=1.50.0

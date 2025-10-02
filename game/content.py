@@ -1,6 +1,5 @@
 """
 Story/world content, prompts, and text constants.
-Move your narrative text here (from the monolith) so engine/tools can import it.
 """
 
 GAME_STORY = r"""

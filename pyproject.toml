@@ -1,0 +1,24 @@
+[tool.black]
+line-length = 100
+target-version = ["py311", "py313"]
+exclude = "\\.venv|/dist/|/build/|/assets/"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [".venv", "dist", "build", "assets"]
+lint.select = ["E", "F", "I", "W"]
+lint.ignore = [
+  "E203",  # black compatibility (whitespace before ':')
+  "E501",  # line length handled by formatter
+]
+format.preview = true
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+exclude = '(\.venv|dist|build|assets)/'

@@ -1,6 +1,7 @@
 """
 Shared configuration for the game UIs
 """
+
 import os
 
 # App configuration
@@ -11,12 +12,7 @@ APP_URL = os.getenv("APP_URL", "http://127.0.0.1:7860")
 API_KEY_PATH = "./resources/openaiApiKey.env"
 
 # Example commands
-EXAMPLE_COMMANDS = [
-    "Look around",
-    "Check phone", 
-    "Open the door",
-    "Run outside"
-]
+EXAMPLE_COMMANDS = ["Look around", "Check phone", "Open the door", "Run outside"]
 
 # Default model configuration
-MODEL = "gpt-4"  # Fixed typo in model name
+MODEL = "gpt-4"
