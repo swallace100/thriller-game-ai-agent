@@ -1,84 +1,97 @@
 """
-Gradio shell for the Thriller Game.
-- Small, readable Blocks layout
-- Theme + CSS polish
+Main for Eternal Hunt.
+- Shared theme/CSS + header/card/footer via game.ui_shared
+- Single Router entrypoint
 - Meta routes: /manifest.json, /robots.txt, /sitemap.xml (via FastAPI)
 """
 
-import datetime
 import os
-
 import gradio as gr
-import nest_asyncio
 from dotenv import load_dotenv
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, FileResponse
+
 from game.engine import autoload_state
+from game.router import Router
+from game.config import (
+    APP_NAME,
+    APP_DESC,
+    APP_VERSION,
+    APP_URL,
+    API_KEY_PATH,
+    EXAMPLE_COMMANDS,
+)
+from game.ui_shared import (
+    TIP_TEXT,
+    GRADIO_CSS,
+    header_html,
+    card_html,
+    footer_html,
+    has_api_key,
+    build_gradio_theme,
+)
 
-
-from app import APP_NAME, APP_DESC, APP_VERSION, APP_URL, ENV_PATH
-from app.router import Router
-
-# ---- env + asyncio ----
-load_dotenv(dotenv_path=ENV_PATH)
-nest_asyncio.apply()
-
-router = Router()
+# ---- env ----
+# Load .env or fallback API key path from config
+if os.path.exists(".env"):
+    load_dotenv()
+elif API_KEY_PATH and os.path.exists(API_KEY_PATH):
+    load_dotenv(dotenv_path=API_KEY_PATH)
 
 # ---- Try to load saved state at startup ----
-# This will automatically load the last saved game state if available.
 autoload_state()
 
-# ---- UI helpers ----
-def build_theme():
-    return gr.themes.Soft(primary_hue="indigo", neutral_hue="slate").set(
-        body_background_fill="*background_fill_primary",
-    )
+# ---- Router (single instance) ----
+_ROUTER = Router()
 
 
-CSS = """
-.gradio-container{max-width:960px;margin:0 auto}
-.header{display:flex;gap:12px;align-items:center;margin:10px 0 6px}
-.header .title{font-size:1.5rem;font-weight:800;letter-spacing:.2px}
-.header .meta{color:#6b7280;font-size:.9rem}
-.section{border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.03)}
-.footer{color:#6b7280;font-size:.85rem;text-align:center;margin-top:14px}
-"""
-
-
+# ---- UI handlers ----
 def handle_chat(message, history):
-    return router.handle(message, history)
+    """Gradio ChatInterface callback (message, history)."""
+    if not _ROUTER.ready:
+        return "⚠️ Router not ready. Check server logs."
+    # history can be list[list[str,str]]; normalize to list[tuple[str,str]]
+    history = [
+        (h[0], h[1]) if isinstance(h, list) else tuple(h) for h in (history or [])
+    ]
+    return _ROUTER.handle((message or "").strip(), history)
 
 
 def build_app():
-    with gr.Blocks(title=APP_NAME, theme=build_theme(), css=CSS, analytics_enabled=False) as app:
+    # Fail fast if no key; mirrors our other Gradio entry
+    if not has_api_key():
+        raise EnvironmentError(
+            "OpenAI API key not found. Please check your .env or API_KEY_PATH."
+        )
+
+    with gr.Blocks(
+        title=APP_NAME,
+        theme=build_gradio_theme(),
+        css=GRADIO_CSS,
+        analytics_enabled=False,
+    ) as app:
         # Header
-        with gr.Row(elem_classes="header"):
-            gr.Markdown(f"**{APP_NAME}**", elem_classes="title")
-            gr.Markdown(f"<span class='meta'>v{APP_VERSION}</span>", elem_id="app-version")
+        gr.Markdown(header_html(APP_NAME, APP_VERSION))
 
-        # Intro / How-to
-        with gr.Row():
-            gr.Markdown(
-                f"<div class='section'><p>{APP_DESC}</p>"
-                "<p><strong>How to play:</strong> try “Look around”, “Inventory”, “Open the door”.</p></div>"
-            )
+        # Intro / How-to (shared card + tip)
+        gr.Markdown(card_html(APP_DESC, TIP_TEXT))
 
-        # Chat
+        # Chat (shared examples)
         gr.ChatInterface(
             fn=handle_chat,
-            textbox=gr.Textbox(placeholder="e.g., Look around the room", autofocus=True),
-            examples=["Look around", "Inventory", "Open the door", "Run outside"],
+            textbox=gr.Textbox(placeholder="Type your action...", autofocus=True),
+            examples=EXAMPLE_COMMANDS,
             cache_examples=False,
             concurrency_limit=5,
         )
 
         # Footer
-        gr.Markdown(f"<div class='footer'>© {datetime.datetime.now().year} — {APP_NAME}</div>")
+        gr.Markdown(footer_html(APP_NAME))
 
     return app
 
 
 demo = build_app()
+
 
 # ---- Meta routes (FastAPI mounted by Gradio) ----
 @demo.app.get("/manifest.json")
@@ -99,7 +112,9 @@ def manifest():
 
 @demo.app.get("/robots.txt")
 def robots():
-    return PlainTextResponse(f"User-agent: *\nAllow: /\nSitemap: {APP_URL.rstrip('/')}/sitemap.xml\n")
+    return PlainTextResponse(
+        f"User-agent: *\nAllow: /\nSitemap: {APP_URL.rstrip('/')}/sitemap.xml\n"
+    )
 
 
 @demo.app.get("/sitemap.xml")
@@ -113,11 +128,12 @@ def sitemap():
 
 # Optional favicon passthrough if you drop a local file next to your entrypoint
 if os.path.exists("favicon.ico"):
+
     @demo.app.get("/favicon.ico")
     def favicon():
         return FileResponse("favicon.ico", media_type="image/x-icon")
 
 
 if __name__ == "__main__":
-    # Use `python -m app.main` or `python app/main.py`
+    # Use: python main.py
     demo.launch()

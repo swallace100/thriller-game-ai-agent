@@ -2,140 +2,65 @@
 Agent wiring + response entrypoint, with autosave after each turn.
 """
 
+from __future__ import annotations
 import asyncio
-from typing import Optional
+from typing import Optional, Dict, Any
 
-from agents import Agent, Runner, WebSearchTool  # same lib you already use
-from game import content
-from game.state import (
-    default_state,
-    save_state,      # NEW: autosave after each turn
-    load_state,      # Optional: for manual/initial load
-)
-from game.tools import (
-    update_game_log,
-    update_research_log,
-    add_player_item,
-    remove_player_item,
-)
+from agents import Agent, Runner
+from game.agents.web_research import make_web_research_agent
+from game.agents.narrator import make_narrator
+from game.state import default_state, save_state, load_state, GameState
 
 
-# ---------- optional: preload a saved game at startup ----------
-# Call autoload_state() from your app bootstrap if you want to resume.
 def autoload_state(path: Optional[str] = None) -> bool:
-    """
-    Try to load state from disk (returns True if loaded).
-    Uses THRILLER_SAVE_PATH env default if path not provided.
-    """
     try:
-        if path:
-            load_state(path)
-        else:
-            # load_state() without args uses DEFAULT_SAVE_PATH from state.py
-            load_state()
+        load_state(path) if path else load_state()
         return True
     except FileNotFoundError:
         return False
 
 
-# ---------- agent builders ----------
-def build_web_research_agent() -> Agent:
-    return Agent(
-        name="Web Research Agent",
-        instructions=(
-            "You support the Thriller Narrator Agent with concise facts. "
-            "Save research queries and results to the research log using update_research_log."
-        ),
-        model="gpt-4o",
-        tools=[WebSearchTool(), update_research_log],
-    )
+# Build the shared web research agent once per process
+_WEB: Agent = make_web_research_agent(default_state)
+# Build narrator (will be rebuilt per-turn with latest state)
+_NARRATOR: Agent = make_narrator(default_state, web_agent=_WEB)
 
 
-def build_narrator_agent(web_research_agent: Optional[Agent] = None) -> Agent:
-    # Snapshot state for instructions (lightweight view only)
-    game_log_view = [e.__dict__ for e in default_state.game_log]
-    items_view = [i.__dict__ for i in default_state.items]
-
-    instructions = f"""
-{content.APP_INSTRUCTIONS_HEADER}
-
-The game world is described here:
-{content.GAME_STORY}
-
-Current game details are stored here:
-{game_log_view}
-
-The player’s current inventory is listed here:
-{items_view}
-
-{content.APP_INSTRUCTIONS_POST}
-""".strip()
-
-    tools = [update_game_log, add_player_item, remove_player_item]
-
-    # If you later want cross-agent calls, expose a tool that forwards to `web_research_agent`.
-    if web_research_agent is not None:
-        pass
-
-    return Agent(
-        name="Thriller Narrator Agent",
-        instructions=instructions,
-        model="gpt-4o",
-        tools=tools,
-    )
-
-
-# Build singletons once per process.
-_WEB = build_web_research_agent()
-_NARRATOR = build_narrator_agent(_WEB)
-
-
-# ---------- run helpers ----------
 def _run_sync(coro):
-    """
-    Runs an async coroutine in the current or a new event loop.
-    """
     try:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(coro)
+        return asyncio.run(coro)
     except RuntimeError:
-        new_loop = asyncio.new_event_loop()
+        loop = asyncio.new_event_loop()
         try:
-            asyncio.set_event_loop(new_loop)
-            return new_loop.run_until_complete(coro)
+            asyncio.set_event_loop(loop)
+            return loop.run_until_complete(coro)
         finally:
-            new_loop.close()
+            loop.close()
 
 
-# ---------- public API used by the UI ----------
 def respond_narrator(message: str) -> str:
     """
-    Main entrypoint called by the UI (Gradio/Streamlit).
-    - Rebuilds narrator with the latest state snapshot
-    - Runs one step
-    - AUTOSAVES state to disk
+    - Rebuild narrator with latest state and injected web-agent tool
+    - Run one step
+    - Autosave state
     """
     global _NARRATOR
-    _NARRATOR = build_narrator_agent(_WEB)
+    _NARRATOR = make_narrator(default_state, web_agent=_WEB)
 
-    res = _run_sync(Runner.run(_NARRATOR, message))
+    result = _run_sync(Runner.run(_NARRATOR, message))
 
-    # --- AUTOSAVE ---
     try:
-        save_state()  # uses DEFAULT_SAVE_PATH from state.py unless overridden by env
+        save_state()
     except Exception as e:
-        # Don't crash the turn if saving fails
         print(f"[autosave warning] {e}")
 
-    return getattr(res, "final_output", str(res))
+    return getattr(result, "final_output", str(result))
 
 
-def get_state_snapshot():
-    """
-    Useful for debugging or a future “View State” panel in the UI.
-    """
+def get_state_snapshot() -> Dict[str, Any]:
+    state: GameState = default_state
     return {
-        "game_log": [e.__dict__ for e in default_state.game_log],
-        "items": [i.__dict__ for i in default_state.items],
-        "research_log": [e.__dict__ for e in default_state.research_log],
+        "game_log": [e.__dict__ for e in state.game_log],
+        "items": [i.__dict__ for i in state.items],
+        "research_log": [e.__dict__ for e in state.research_log],
     }

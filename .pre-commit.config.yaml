@@ -1,0 +1,39 @@
+# .pre-commit-config.yaml
+ci:
+  autoupdate_schedule: monthly
+
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.10.0 # or run: pre-commit autoupdate
+    hooks:
+      - id: black
+        args: ["--line-length=100"]
+        exclude: "^(\\.venv/|dist/|build/|assets/|.*\\.ipynb$)"
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.7 # or autoupdate
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        exclude: "^(\\.venv/|dist/|build/|assets/|.*\\.ipynb$)"
+      - id: ruff-format
+        exclude: "^(\\.venv/|dist/|build/|assets/|.*\\.ipynb$)"
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0 # or autoupdate
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          # Add stubs if needed later, e.g.:
+          # - types-requests
+          # - types-python-dateutil
+        exclude: "^(\\.venv/|dist/|build/|assets/)"
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0 # or autoupdate
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+      - id: detect-private-key

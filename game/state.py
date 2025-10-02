@@ -9,8 +9,13 @@ import json
 import time
 import os
 
-GameLogCategory = Literal["event", "discovery", "decision", "question", "item", "ambient"]
-ResearchCategory = Literal["info", "symbol", "historical", "technical", "psychological", "warning"]
+GameLogCategory = Literal[
+    "event", "discovery", "decision", "question", "item", "ambient"
+]
+ResearchCategory = Literal[
+    "info", "symbol", "historical", "technical", "psychological", "warning"
+]
+
 
 @dataclass
 class GameLogEntry:
@@ -18,16 +23,19 @@ class GameLogEntry:
     entry: str
     ts: float = field(default_factory=lambda: time.time())
 
+
 @dataclass
 class ResearchLogEntry:
     category: ResearchCategory
     entry: str
     ts: float = field(default_factory=lambda: time.time())
 
+
 @dataclass
 class InventoryItem:
     name: str
     description: str = ""
+
 
 @dataclass
 class GameState:
@@ -72,35 +80,43 @@ class GameState:
             data = json.load(f)
         return cls.from_dict(data)
 
+
 # ---------- default global state ----------
 default_state = GameState()
 
 # ---------- persistence helpers ----------
-DEFAULT_SAVE_PATH = os.getenv("THRILLER_SAVE_PATH", "assets/sample_runs/session_latest.json")
+DEFAULT_SAVE_PATH = os.getenv(
+    "THRILLER_SAVE_PATH", "assets/sample_runs/session_latest.json"
+)
+
 
 def _get_save_path(path: str | None = None) -> str:
     return path or os.getenv(
-        "THRILLER_SAVE_PATH",
-        "assets/sample_runs/session_latest.json"
+        "THRILLER_SAVE_PATH", "assets/sample_runs/session_latest.json"
     )
 
-def save_state(path: str = DEFAULT_SAVE_PATH) -> None:
+
+def save_state(path: str | None = None) -> str:
     """
-    Saves the current default_state to the given path.
-    Creates directories as needed.
+    Saves the current default_state to the given path (or THRILLER_SAVE_PATH if unset).
+    Creates directories as needed. Returns the resolved path.
     """
     path = _get_save_path(path)
     default_state.save_json(path)
+    return path
 
 
-def load_state(path: str = DEFAULT_SAVE_PATH) -> None:
+def load_state(path: str | None = None) -> None:
     """
     Loads game state from the given path into default_state.
-    Overwrites current in-memory logs/items.
+    Overwrites current in-memory logs/items *in place* to keep references valid.
     """
-    global default_state
     path = _get_save_path(path)
     if os.path.exists(path):
-        default_state = GameState.load_json(path)
+        new_state = GameState.load_json(path)
+        # mutate in place so existing references stay valid
+        default_state.game_log = new_state.game_log
+        default_state.research_log = new_state.research_log
+        default_state.items = new_state.items
     else:
         raise FileNotFoundError(f"No saved game found at {path}")

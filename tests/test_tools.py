@@ -1,5 +1,3 @@
-# tests/test_tools.py
-
 import pytest
 import pytest_asyncio
 
@@ -64,6 +62,10 @@ async def test_inventory_management(clean_state):
     assert isinstance(item, state.InventoryItem), "Should create proper InventoryItem"
     assert item.name == "flashlight", "Should store item name"
     assert item.description == "dim beam", "Should store item description"
+    # Add duplicate
+    msg_dup = await tools.add_player_item("flashlight")
+    assert "already in your inventory" in msg_dup
+    assert len(state.default_state.items) == 1
 
     # Act: remove the same item
     msg = await tools.remove_player_item("flashlight")
@@ -82,8 +84,7 @@ async def test_research_log(clean_state):
 
     # Act: add research log entry
     msg = await tools.update_research_log(
-        "DNA sequence matches known longevity markers",
-        category="technical"
+        "DNA sequence matches known longevity markers", category="technical"
     )
 
     # Assert: confirmation and state
@@ -93,3 +94,50 @@ async def test_research_log(clean_state):
     entry = state.default_state.research_log[0]
     assert entry.category == "technical", "Should set correct category"
     assert "DNA sequence" in entry.entry, "Should store research info"
+
+
+async def test_query_web_research_bridge(clean_state, monkeypatch):
+    """
+    Ensure the bridge tool calls Runner.run with the injected web agent,
+    returns the agent's text, and appends a Q/A entry to research_log.
+    """
+    state, tools = clean_state
+
+    # Create a fake web agent and a fake Runner.run that returns a rich-ish object
+    class FakeAgent: ...
+
+    fake_agent = FakeAgent()
+
+    class FakeResult:
+        def __init__(self, text):
+            self.final_output = text
+
+    calls = {}
+
+    async def fake_run(agent, query):
+        # capture the call for assertions
+        calls["agent"] = agent
+        calls["query"] = query
+        return FakeResult("Longevity markers confirmed")
+
+    # Patch Runner.run
+    from agents import Runner
+
+    monkeypatch.setattr(Runner, "run", fake_run, raising=True)
+
+    # Build the bridge tool via the new factory and call it
+    bridge = tools.make_query_web_research_tool(fake_agent)
+    out = await bridge("What are FOXP2 markers?")
+
+    # Returned text should be the agent's final_output
+    assert "Longevity markers confirmed" in out
+
+    # Bridge should have called Runner.run with our fake agent and query
+    assert calls["agent"] is fake_agent
+    assert calls["query"] == "What are FOXP2 markers?"
+
+    # And persisted a Q/A entry into the research log
+    assert len(state.default_state.research_log) == 1
+    log_entry = state.default_state.research_log[0]
+    assert "Q: What are FOXP2 markers?" in log_entry.entry
+    assert "A: Longevity markers confirmed" in log_entry.entry

@@ -1,4 +1,4 @@
-# Thriller Game 🎭
+# Eternal Hunt: AI Agent Powered Game 🎭
 
 A near-future text thriller powered by an AI Narrator Agent. Experience an interactive story through natural language commands and responses.
 
@@ -80,7 +80,6 @@ Try these example commands:
 - "Look around"
 - "Inventory"
 - "Open the door"
-- "Run outside"
 
 ## 💻 Technology Stack
 
@@ -104,7 +103,7 @@ This project is licensed under the MIT License:
 ```
 MIT License
 
-Copyright (c) 2025 Thriller Game
+Copyright (c) 2025 Eternal Hunt: AI Agent Powered Game
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
