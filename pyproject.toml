@@ -15,7 +15,7 @@ lint.ignore = [
 format.preview = true
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 ignore_missing_imports = true
 strict_optional = true
 warn_unused_ignores = true

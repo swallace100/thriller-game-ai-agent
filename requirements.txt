@@ -3,3 +3,7 @@ gradio>=5.43.0
 fastapi>=0.118
 uvicorn[standard]>=0.37.0
 streamlit>=1.50.0
+openai-agents>=0.3.3
+pydantic>=2.11.9
+pydantic-settings>=2.5.2
+numpy>=2.3.3

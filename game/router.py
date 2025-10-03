@@ -1,32 +1,31 @@
-"""
-Very small message router: one place to call the narrator function.
-If you later add commands (/reset, /help) or pre/post-processing, do it here.
-"""
+from __future__ import annotations
 
-from typing import List, Tuple
+from typing import Callable, List, Optional, Tuple
 
-# Import the real narrator hook
+# Public type for the narrator entrypoint
+RespondFn = Callable[[str], str]
+
+# Try to import the real narrator hook; record the import error if any
 try:
-    from game.engine import respond_narrator  # noqa: F401
-except Exception:
-    respond_narrator = None  # type: ignore
+    from game.engine import respond_narrator as _respond_narrator
+
+    respond_narrator: Optional[RespondFn] = _respond_narrator  # optional, see except path
+    _IMPORT_ERR: Optional[Exception] = None
+except Exception as e:  # pragma: no cover - exercised only when engine is missing
+    respond_narrator = None
+    _IMPORT_ERR = e
 
 # Keep tip text aligned with the frontends
 try:
     from game.ui_shared import TIP_TEXT
 except Exception:
-    TIP_TEXT = "Try “Look around”, “Inventory”, “Open the door”."
-
-# Example command hook (stub for future)
-# def _handle_command(text: str) -> str | None:
-#     if text.lower() == "/help":
-#         return "Commands: /help, /reset (coming soon). " + TIP_TEXT
-#     return None
+    TIP_TEXT = "“Look around”, “Inventory”, “Open the door”."
 
 
 class Router:
-    def __init__(self):
-        self._ready = callable(respond_narrator)
+    def __init__(self) -> None:
+        # Explicitly annotate so mypy knows this is a bool (not Any)
+        self._ready: bool = callable(respond_narrator)
 
     @property
     def ready(self) -> bool:
@@ -37,21 +36,20 @@ class Router:
         Main entry used by the UI layer. History is provided for future use
         (e.g., you may inspect recent turns for system prompts or state).
         """
-        if not self._ready:
+        if not self._ready or respond_narrator is None:
+            # Log the actual import error to console for debugging
+            if _IMPORT_ERR:
+                print("[router import error]", repr(_IMPORT_ERR))
             return (
                 "⚠️ Dependency missing or not importable: game.engine.respond_narrator.\n"
                 "Ensure the agents framework is installed and imports succeed."
             )
 
-        try:
-            text = (message or "").strip()
-            if not text:
-                return f"Say something like: {TIP_TEXT}"
+        text = (message or "").strip()
+        if not text:
+            return f"Say something like: {TIP_TEXT}"
 
-            # cmd = _handle_command(text)
-            # if cmd is not None:
-            #     return cmd
+        # If you add command handling later, do it here.
 
-            return respond_narrator(text)  # type: ignore
-        except Exception as e:
-            return f"⚠️ Error: {e!s}"
+        # `respond_narrator` is non-None in this branch (narrowed above)
+        return respond_narrator(text)

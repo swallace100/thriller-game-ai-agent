@@ -3,25 +3,27 @@ Eternal Hunt: AI Agent Powered Game — Streamlit Web App
 """
 
 import os
-from dotenv import load_dotenv
+
 import streamlit as st
+from dotenv import load_dotenv
 
 from game.config import (
-    APP_NAME,
+    API_KEY_PATH,
     APP_DESC,
+    APP_NAME,
     APP_VERSION,
     EXAMPLE_COMMANDS,
-    API_KEY_PATH,
 )
+from game.content import NARRATOR_INTRO
+from game.router import Router
 from game.ui_shared import (
-    TIP_TEXT,
     STREAMLIT_CSS,
-    header_html,
+    TIP_TEXT,
     card_html,
     footer_html,
     has_api_key,
+    header_html,
 )
-from game.router import Router
 
 # Load environment variables before importing game modules
 if os.path.exists(".env"):
@@ -34,7 +36,7 @@ _ROUTER = Router()
 
 
 def css():
-    st.markdown(STREAMLIT_CSS, unsafe_allow_html=True)
+    st.markdown(f"<style>{STREAMLIT_CSS}</style>", unsafe_allow_html=True)
 
 
 def sidebar():
@@ -94,18 +96,23 @@ def main():
     st.set_page_config(page_title=APP_NAME, page_icon="🎭", layout="centered")
     css()
     sidebar()
-
-    if not has_api_key():
-        st.error("OpenAI API key not found. Please check your .env file.")
-        st.markdown(footer_html(APP_NAME), unsafe_allow_html=True)
-        return
-
     if "chat" not in st.session_state:
         st.session_state.chat = []
     if "_pending_prompt" not in st.session_state:
         st.session_state["_pending_prompt"] = None
 
+    # 🔽 Seed intro once if chat is empty
+    if not st.session_state.chat:
+        st.session_state.chat.append(("assistant", NARRATOR_INTRO))
+
     header()
+
+    if not _ROUTER.ready:
+        st.warning(
+            "⚠️ Dependency missing or not importable: `game.engine.respond_narrator`. "
+            "Ensure the agents framework is installed and imports succeed."
+        )
+
     render_history()
 
     pending = st.session_state.get("_pending_prompt")

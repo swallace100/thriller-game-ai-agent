@@ -40,7 +40,6 @@ install: venv
 	$(PY) -m pip install -U pip
 	-$(PIP) install -r requirements.txt
 	-$(PIP) install -r requirements-dev.txt
-	-$(PIP) install -e .
 
 dev: install
 
@@ -71,7 +70,7 @@ typecheck: venv
 	@.venv$(if $(filter Windows_NT,$(OS)),/Scripts,/bin)/mypy game app tests || true
 
 run: install
-	$(PY) main.py
+	$(PY) app_gradio.py
 
 gradio: install
 	$(PY) app_gradio.py
