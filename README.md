@@ -1,137 +1,96 @@
 # Eternal Hunt: AI Agent Powered Game 🎭
 
-A near-future text thriller powered by an AI Narrator Agent. Experience an interactive story through natural language commands and responses.
+A near-future text thriller powered by an AI Narrator Agent. Type what you do; the world responds, logs evolve, and your inventory changes in real time.
 
 ## 🚀 Features
 
-- Interactive text-based gameplay
-- AI-powered narrative responses
-- Inventory management system
-- Game state tracking
-- Multiple user interfaces (Gradio & Streamlit)
-- Clean, production-ready code structure
+- Conversational, AI-driven narrative
+- Inventory + structured game log + research log
+- Autosave after each turn (THRILLER_SAVE_PATH)
+- Two UIs: Gradio (1-file, FastAPI routes) & Streamlit
+- Shared UI polish (dark/light, intro seed, examples)
+- Clean, testable, modular code
 
 ## 📁 Project Structure
 
 ```
-agent-code/
-├── game/
-│   ├── __init__.py
-│   ├── api.py              # Core game API functions
-│   ├── state.py            # Game state management
-│   ├── tools.py            # Function tools for agents
-│   ├── content.py          # Game story and content
-│   ├── config.py           # Configuration settings
-│   └── agents/
-│       ├── __init__.py
-│       └── narrator.py     # Narrator agent implementation
-├── app_gradio.py          # Gradio web interface
-├── app_streamlit.py       # Streamlit web interface
-├── .env                   # Environment variables (create this)
-└── requirements.txt       # Project dependencies
+.
+├─ app_gradio.py             # Gradio web app (with manifest/robots/sitemap routes)
+├─ app_streamlit.py          # Streamlit web app
+├─ game/
+│  ├─ __init__.py
+│  ├─ config.py              # Names, URLs, example commands, model
+│  ├─ content.py             # Story text + NARRATOR_INTRO
+│  ├─ state.py               # GameState + save/load helpers
+│  ├─ tools.py               # function_tool tools (log/inventory/research)
+│  ├─ engine.py              # Agent wiring + respond_narrator + output scrubber
+│  ├─ narrator.py            # make_narrator(state)
+│  ├─ web_research.py        # make_web_research_agent(state)
+│  ├─ ui_shared.py           # Shared CSS/HTML helpers for both UIs
+│  └─ router.py              # Thin wrapper used by UIs
+├─ assets/                   # sample runs, favicon, etc.
+├─ docs/
+│  └─ DEVELOPMENT.md         # Dev setup, commands, troubleshooting
+├─ tests/                    # pytest suite + fixtures
+├─ requirements.txt          # runtime deps
+├─ requirements-dev.txt      # test/lint/dev deps (optional)
+└─ .pre-commit-config.yaml   # formatting/lint hooks
+
 ```
 
-## 🛠️ Setup
+## 🚀 Quickstart
 
-1. Clone the repository
-2. Create a virtual environment:
+Prefer Make? Great—everything below uses it. If you don’t have make, see manual commands in docs/DEVELOPMENT.md.
 
 ```bash
-python -m venv venv
-.\venv\Scripts\activate
+# one-time
+make install         # create .venv and install deps
+make pc-install      # set up pre-commit git hook
+
+# run tests
+make test            # or: make testv
+
+# launch a UI
+make run             # Gradio (http://127.0.0.1:7860)
+# or
+make streamlit       # Streamlit (http://localhost:8501)
 ```
 
-3. Install dependencies:
+### Environment
+
+Create a .env in resources/openaiApiKey.env:
+
+```txt
+OPENAI_API_KEY=sk-...
+```
+
+### 🎮 How to Play
+
+Type actions in the chat:
+
+- Look around
+- Inventory
+- Open the door
+- Check phone
+- Run outside
+
+The narrator replies cinematically; logs and inventory update silently in the background.
+
+### 🧪 Testing & Quality
 
 ```bash
-pip install -r requirements.txt
+make test      # run tests (autosets THRILLER_SAVE_PATH to a temp path)
+make lint      # ruff
+make fmt       # ruff --fix
+make pc-run    # run pre-commit hooks across the repo
 ```
 
-4. Create a `.env` file in the project root:
+Tests stub the `agents` library to avoid network calls; runtime uses the real `openai-agents`.
 
-```env
-OPENAI_API_KEY=your-api-key-here
-```
+📜 License
 
-## 🎮 Running the Game
+MIT — see the full text in this repository.
 
-You can run the game using either the Gradio or Streamlit interface:
+🤝 Contributing
 
-### Gradio Interface
-
-```bash
-python app_gradio.py
-```
-
-Then open http://127.0.0.1:7860 in your browser.
-
-### Streamlit Interface
-
-```bash
-python -m streamlit run app_streamlit.py
-```
-
-Then open http://localhost:8501 in your browser.
-
-## 🎯 How to Play
-
-Try these example commands:
-
-- "Look around"
-- "Inventory"
-- "Open the door"
-
-## 💻 Technology Stack
-
-- Python 3.x
-- OpenAI GPT Models
-- Gradio
-- Streamlit
-- OpenAI Agents Framework
-
-## 🔑 Environment Variables
-
-Required environment variables:
-
-- `OPENAI_API_KEY`: Your OpenAI API key
-- `APP_URL`: (Optional) Custom URL for deployment
-
-## 📝 License
-
-This project is licensed under the MIT License:
-
-```
-MIT License
-
-Copyright (c) 2025 Eternal Hunt: AI Agent Powered Game
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## ⚠️ Note
-
-Remember to never commit your API keys or sensitive information to version control.
+PRs welcome! Run make pc-run and make test before opening a PR.

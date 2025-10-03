@@ -3,13 +3,16 @@ Agent wiring + response entrypoint, with autosave after each turn.
 """
 
 from __future__ import annotations
+
 import asyncio
-from typing import Optional, Dict, Any
+import re
+from typing import Any, Dict, Optional
 
 from agents import Agent, Runner
-from game.agents.web_research import make_web_research_agent
+
 from game.agents.narrator import make_narrator
-from game.state import default_state, save_state, load_state, GameState
+from game.agents.web_research import make_web_research_agent
+from game.state import GameState, default_state, load_state, save_state
 
 
 def autoload_state(path: Optional[str] = None) -> bool:
@@ -25,6 +28,15 @@ _WEB: Agent = make_web_research_agent(default_state)
 # Build narrator (will be rebuilt per-turn with latest state)
 _NARRATOR: Agent = make_narrator(default_state, web_agent=_WEB)
 
+_TOOL_LEAK_PATTERNS = (
+    # Common function-call “narration”
+    r"(?mi)^\s*Functions?\.[\w\.]+\s*-.*$",  # Functions.update_game_log - ...
+    r"(?mi)^\s*(?:Tool|Function)\s*(?:Call|Result):.*$",  # Tool Call: ..., Function Result: ...
+    # JSON-y function call blobs that sometimes get printed
+    r"(?mi)^\s*\{\s*\"(?:tool|function)\".*?\}\s*$",
+    r"(?mi)^\s*args\s*:\s*\{.*?\}\s*$",
+)
+
 
 def _run_sync(coro):
     try:
@@ -36,6 +48,18 @@ def _run_sync(coro):
             return loop.run_until_complete(coro)
         finally:
             loop.close()
+
+
+def _scrub_tool_meta(text: str) -> str:
+    if not text:
+        return text
+    for pat in _TOOL_LEAK_PATTERNS:
+        text = re.sub(pat, "", text)
+    # remove stray bracketed asides like “[Assistant has added …]”
+    text = re.sub(r"(?mi)^\s*\[.*?(?:added|saved|update).*?\]\s*$", "", text)
+    # collapse extra blank lines
+    text = re.sub(r"\n{3,}", "\n\n", text).strip()
+    return text
 
 
 def respond_narrator(message: str) -> str:
@@ -54,7 +78,8 @@ def respond_narrator(message: str) -> str:
     except Exception as e:
         print(f"[autosave warning] {e}")
 
-    return getattr(result, "final_output", str(result))
+    raw = getattr(result, "final_output", str(result))
+    return _scrub_tool_meta(raw)
 
 
 def get_state_snapshot() -> Dict[str, Any]:

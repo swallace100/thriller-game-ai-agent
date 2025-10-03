@@ -3,29 +3,30 @@ Eternal Hunt: AI Agent Powered Game — Gradio Web App
 """
 
 import os
-from dotenv import load_dotenv
-import datetime
+
 import gradio as gr
-from fastapi.responses import JSONResponse, PlainTextResponse, Response, FileResponse
+from dotenv import load_dotenv
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 
 from game.config import (
-    APP_NAME,
-    APP_DESC,
-    APP_VERSION,
-    APP_URL,
-    EXAMPLE_COMMANDS,
     API_KEY_PATH,
+    APP_DESC,
+    APP_NAME,
+    APP_URL,
+    APP_VERSION,
+    EXAMPLE_COMMANDS,
 )
+from game.content import NARRATOR_INTRO
+from game.router import Router
 from game.ui_shared import (
-    TIP_TEXT,
     GRADIO_CSS,
-    header_html,
+    TIP_TEXT,
+    build_gradio_theme,
     card_html,
     footer_html,
     has_api_key,
-    build_gradio_theme,
+    header_html,
 )
-from game.router import Router
 
 # Load environment variables before importing game modules
 if os.path.exists(".env"):
@@ -37,14 +38,19 @@ elif os.path.exists(API_KEY_PATH):
 _ROUTER = Router()
 
 
-def handle_chat(message, history):  # ChatInterface requires (message, history)
+def handle_chat(message, history):
+    # history is a list of {"role": "...", "content": "..."} dicts with type="messages"
+    text = message["content"] if isinstance(message, dict) else str(message)
     if not _ROUTER.ready:
-        return "⚠️ Router not ready. Check server logs."
-    # history comes as list of [user, assistant] pairs in Gradio; normalize to tuples
-    history = [
-        (h[0], h[1]) if isinstance(h, list) else tuple(h) for h in (history or [])
-    ]
-    return _ROUTER.handle(message, history)
+        return (
+            "⚠️ Dependency missing or not importable: game.engine.respond_narrator. "
+            "Ensure the agents framework is installed and imports succeed."
+        )
+    try:
+        # Pass history through; Router currently ignores it but may use it later
+        return _ROUTER.handle(text, history)
+    except Exception as e:
+        return f"⚠️ Error: {e!s}"
 
 
 def build_app():
@@ -60,13 +66,21 @@ def build_app():
         gr.Markdown(header_html(APP_NAME, APP_VERSION))
         gr.Markdown(card_html(APP_DESC, TIP_TEXT))
 
-        gr.ChatInterface(
+        ci = gr.ChatInterface(
             fn=handle_chat,
+            type="messages",
             textbox=gr.Textbox(placeholder="Type your action...", autofocus=True),
             examples=EXAMPLE_COMMANDS,
             cache_examples=False,
             concurrency_limit=5,
         )
+
+        def seed_intro():
+            msgs = [{"role": "assistant", "content": NARRATOR_INTRO}]
+            return msgs, msgs  # <- seed the visible chatbot AND the internal state
+
+        # seed BOTH outputs: chatbot + state
+        app.load(fn=seed_intro, outputs=[ci.chatbot, ci.chatbot_state])
 
         gr.Markdown(footer_html(APP_NAME))
 
@@ -104,7 +118,7 @@ def robots():
 def sitemap():
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>{APP_URL.rstrip('/')}/</loc></url>
+  <url><loc>{APP_URL.rstrip("/")}/</loc></url>
 </urlset>"""
     return Response(content=xml, media_type="application/xml")
 

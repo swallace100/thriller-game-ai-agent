@@ -1,6 +1,7 @@
 from agents import Agent
-from ..content import GAME_STORY
+
 from ..config import MODEL
+from ..content import GAME_STORY
 from ..state import GameState
 from ..tools import set_narrator_tools
 
@@ -20,7 +21,7 @@ Inventory:
 
 If you require real-world facts, call the tool `query_web_research_agent` with a concise question.
 Record concise updates with update_game_log after each action. Use add/remove inventory tools on changes.
-Do not mention tool usage to the player. Keep responses vivid, cinematic, and grounded.
+Do not mention internal tools, tool names, tool calls, or system notes in your reply. Keep responses vivid, cinematic, and grounded.
 """.strip()
 
     return Agent(

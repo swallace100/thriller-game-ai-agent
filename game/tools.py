@@ -2,17 +2,20 @@
 Function tools used by the agents.
 """
 
-from typing import Literal, List, Optional
-from agents import function_tool, Runner
-from game.state import default_state, GameLogEntry, ResearchLogEntry, InventoryItem
+from typing import TYPE_CHECKING, Awaitable, Callable, List, Literal, Optional, cast
+
+from agents import Runner, function_tool
+
+from game.state import GameLogEntry, InventoryItem, ResearchLogEntry, default_state
+
+if TYPE_CHECKING:
+    from agents import Agent
 
 
 @function_tool
 async def update_game_log(
     new_entry: str,
-    category: Literal[
-        "event", "discovery", "decision", "question", "item", "ambient"
-    ] = "event",
+    category: Literal["event", "discovery", "decision", "question", "item", "ambient"] = "event",
 ) -> str:
     """Saves a structured log entry to the game log with a category."""
     default_state.game_log.append(GameLogEntry(category=category, entry=new_entry))
@@ -27,9 +30,7 @@ async def update_research_log(
     ] = "info",
 ) -> str:
     """Saves a structured log entry to the research log with a category."""
-    default_state.research_log.append(
-        ResearchLogEntry(category=category, entry=new_entry)
-    )
+    default_state.research_log.append(ResearchLogEntry(category=category, entry=new_entry))
     return f"Research log updated with a {category} entry."
 
 
@@ -57,7 +58,7 @@ async def remove_player_item(item_name: str) -> str:
 # ---------------------------
 
 
-def make_query_web_research_tool(web_agent) -> callable:
+def make_query_web_research_tool(web_agent: "Agent") -> Callable[[str], Awaitable[str]]:
     """
     Returns a function-tool that lets the Narrator query the Web Research Agent.
     Injects `web_agent` via closure to avoid importing from engine.py.
@@ -80,7 +81,8 @@ def make_query_web_research_tool(web_agent) -> callable:
         except Exception as e:
             return f"[web research error] {e}"
 
-    return query_web_research_agent
+    # function_tool likely returns `Any`; tell mypy what we return:
+    return cast(Callable[[str], Awaitable[str]], query_web_research_agent)
 
 
 def set_narrator_tools(state, web_agent: Optional[object] = None) -> List:

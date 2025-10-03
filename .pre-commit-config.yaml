@@ -24,6 +24,7 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
+          []
           # Add stubs if needed later, e.g.:
           # - types-requests
           # - types-python-dateutil

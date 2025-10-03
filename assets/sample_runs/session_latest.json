@@ -1,11 +1,5 @@
 {
-  "game_log": [
-    {
-      "category": "event",
-      "entry": "Player spotted two figures in suits approaching their door, communicating over earpieces. A black SUV is idling outside.",
-      "ts": 1757664057.1734002
-    }
-  ],
+  "game_log": [],
   "research_log": [],
   "items": []
 }
