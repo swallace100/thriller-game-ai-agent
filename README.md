@@ -2,6 +2,10 @@
 
 A near-future text thriller powered by an AI Narrator Agent. Type what you do; the world responds, logs evolve, and your inventory changes in real time.
 
+![Eternal Hunt](assets/EternalHuntTitle.png)
+
+<i>Generated using ChatGPT 5</i>
+
 ## 🚀 Features
 
 - Conversational, AI-driven narrative
