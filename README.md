@@ -1,6 +1,15 @@
-# Eternal Hunt: AI Agent Powered Game 🎭
+# 🎭 Eternal Hunt: AI Agent-Powered Thriller Game
 
-A near-future text thriller powered by an AI Narrator Agent. Type what you do; the world responds, logs evolve, and your inventory changes in real time.
+![Python](https://img.shields.io/badge/Python-3.13+-blue)
+![OpenAI Agents](https://img.shields.io/badge/OpenAI-Agents-orange)
+![Frameworks](https://img.shields.io/badge/FastAPI%20·%20Gradio%20·%20Streamlit-purple)
+![Data Models](https://img.shields.io/badge/Pydantic%20·%20NumPy-lightblue)
+![Dev Tools](https://img.shields.io/badge/Pytest%20·%20Ruff%20·%20Precommit-gray)
+![License: MIT](https://img.shields.io/badge/License-MIT-green)
+![Status](https://img.shields.io/badge/Status-Playable%20Prototype-yellow)
+
+> A near-future **interactive text thriller** powered by an **AI Narrator Agent**.
+> Type what you do — the world responds, logs evolve, and your inventory changes in real time.
 
 ![Eternal Hunt](assets/EternalHuntTitle.png)
 
@@ -80,7 +89,28 @@ Type actions in the chat:
 
 The narrator replies cinematically; logs and inventory update silently in the background.
 
-### 🧪 Testing & Quality
+## 🧠 Tech Stack
+
+### Core
+
+- Python 3.13+ — async-first architecture with type safety
+- OpenAI Agents 0.3+ — dynamic narrator and reasoning layer
+- Pydantic v2 + pydantic-settings — structured state & config validation
+- NumPy 2.3+ — lightweight numerical utilities for agent memory and logs
+
+### Web Frameworks
+
+- FastAPI + Uvicorn — lightweight API backend (Gradio mode)
+- Gradio 5.43+ — rapid UI prototyping, single-file web interface
+- Streamlit 1.50+ — alternate UI for interactive storytelling
+
+### Environment & Utilities
+
+- python-dotenv — environment and key management
+- pre-commit + ruff — formatting, linting, and code hygiene
+- pytest — full test coverage with isolated agent stubs
+
+## 🧪 Testing & Quality
 
 ```bash
 make test      # run tests (autosets THRILLER_SAVE_PATH to a temp path)
@@ -91,10 +121,10 @@ make pc-run    # run pre-commit hooks across the repo
 
 Tests stub the `agents` library to avoid network calls; runtime uses the real `openai-agents`.
 
-📜 License
+## 📜 License
 
 MIT — see the full text in this repository.
 
-🤝 Contributing
+## 🤝 Contributing
 
 PRs welcome! Run make pc-run and make test before opening a PR.
